@@ -1,51 +1,19 @@
 jQuery(document).ready(function($) {
-  // Initialize date and time pickers
-  let minDate = parseInt($("#wc-date-picker").data("min-date"), 10);
-  let minTime = parseInt($("#wc-time-picker").data("min-time"), 10);
-  var availableDates = wcDateTimePickerData.available_dates;
-  var availableTimeSlots = wcDateTimePickerData.available_time_slots;
-  var allowed_products = JSON.parse(wc_datetime_picker_params.allowed_products); // Parse the JSON string
-  var current_product_id = parseInt(wc_datetime_picker_params.current_product_id, 10);
+  $("form.cart").on("submit", function(e) {
+    var $form = $(this);
+    var wcDate = $form.find("#wc-date-picker").val();
+    var wcTime = $form.find("#wc-time-picker").val();
 
-  if (allowed_products.includes(current_product_id)) {
+    if (!wcDate || !wcTime) {
+      e.preventDefault();
+      alert("Please enter a date and time before adding to the cart.");
+      return false;
+    }
 
-  function isAvailableDate(date) {
-    var dateString = jQuery.datepicker.formatDate('yy-mm-dd', date);
-    return (availableDates.indexOf(dateString) > -1);
-  }
-
-  $("#wc-date-picker").datepicker({
-    minDate: minDate,
-    dateFormat: "yy-mm-dd",
-    beforeShowDay: function(date) {
-      if (availableDates.length > 0) {
-        return [isAvailableDate(date)];
-      }
-      return [true];
-    },
+    $("<input>")
+      .attr("type", "hidden")
+      .attr("name", "wc_date_time")
+      .val(wcDate + " " + wcTime)
+      .appendTo($form);
   });
-
-  $("#wc-time-picker").timepicker({
-    minTime: minTime,
-    timeFormat: "H:i",
-    disableTimeRanges: availableTimeSlots.length > 0 ? [] : [['12am', '11:59pm']],
-  });
-
-  if (availableTimeSlots.length > 0) {
-    $('#wc-time-picker').on('show.timepicker', function() {
-      var instance = $(this).data('timepicker');
-      var date = $('#wc-date-picker').datepicker('getDate');
-
-      if (isAvailableDate(date)) {
-        instance.option('disableTimeRanges', []);
-        availableTimeSlots.forEach(function(timeSlot) {
-          var timeRange = timeSlot.split('-');
-          instance.option('disableTimeRanges').push(timeRange);
-        });
-      } else {
-        instance.option('disableTimeRanges', [['12am', '11:59pm']]);
-      }
-    });
-  }
-  }
-};
+});
